@@ -22,7 +22,6 @@ const auth: NextApiHandler = (req, res) =>
         },
         callbacks: {
             jwt: async (token, user) => {
-                console.log('FF');
                 const { role, id } = token;
 
                 if (!role) {

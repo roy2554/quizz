@@ -16,30 +16,7 @@ const Home: NextPage = () => {
                 <title>QUIZZ</title>
             </div>
             <p>QUIZZ</p>
-            <Image src="/quizz.svg" alt="quizz" width={200} height={200} />
-            <p
-                onClick={() => {
-                    signIn('google');
-                }}
-            >
-                AUTH
-            </p>
-            {session ? (
-                <div>
-                    <p>{session.user.name}</p>
-                    <p
-                        onClick={() => {
-                            signOut();
-                        }}
-                    >
-                        sign out
-                    </p>
-                </div>
-            ) : (
-                <div>
-                    <p>not authorized</p>
-                </div>
-            )}
+            <p>application for</p>
         </div>
     );
 };

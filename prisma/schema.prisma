@@ -54,6 +54,8 @@ model User {
   sessions      Session[]
   role          Role      @default(USER)
   sets          Set[]
+
+  @@unique([id, email])
 }
 
 model VerificationToken {
@@ -65,19 +67,21 @@ model VerificationToken {
 }
 
 model Set {
-  id        Int      @id @default(autoincrement())
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  cards     Card[]
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  cards       Card[]
 }
 
 model Card {
   id        Int      @id @default(autoincrement())
   setId     Int
-  name      String?
+  question  String
+  answer    String[]
   image     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
