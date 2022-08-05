@@ -113,6 +113,24 @@ const CreateSet: NextPage = () => {
         }
     };
 
+    const modifyOrder = (oldOrder: number, newOrder: number) => {
+        if (oldOrder === newOrder) return;
+        if (newOrder > cards.length) {
+            console.log('MODIFY ORDER ERROR: out of range');
+            return;
+        }
+        if (newOrder < 1) {
+            console.log('MODIFY ORDER ERROR: out of range');
+            return;
+        }
+
+        const newCards = [...cards];
+        const card = newCards[oldOrder - 1];
+        newCards.splice(oldOrder - 1, 1);
+        newCards.splice(newOrder - 1, 0, card);
+        setCards(newCards);
+    };
+
     const dragCard = useRef<any>(null);
     const dragOverCard = useRef<any>(null);
 
@@ -129,11 +147,12 @@ const CreateSet: NextPage = () => {
 
     const eachCard_dragEnd = (e: React.DragEvent<HTMLDivElement>) => {
         if (dragCard.current !== dragOverCard.current) {
-            const newCards = [...cards];
-            const card = newCards[dragCard.current - 1];
-            newCards.splice(dragCard.current - 1, 1);
-            newCards.splice(dragOverCard.current - 1, 0, card);
-            setCards(newCards);
+            modifyOrder(dragCard.current, dragOverCard.current);
+            // const newCards = [...cards];
+            // const card = newCards[dragCard.current - 1];
+            // newCards.splice(dragCard.current - 1, 1);
+            // newCards.splice(dragOverCard.current - 1, 0, card);
+            // setCards(newCards);
         }
 
         setStateDragOverCard(null);
@@ -213,6 +232,7 @@ const CreateSet: NextPage = () => {
                                 dragEnter={eachCard_dragEnter}
                                 dragEnd={eachCard_dragEnd}
                                 dragTarget={stateDragOverCard}
+                                modifyOrder={modifyOrder}
                             />
                             <div
                                 className="cursor-pointer dark:bg-dark-bg dark:hover:bg-dark-bg-hover p-4 rounded-md border-2 dark:border-dark-border text-center"
@@ -225,8 +245,8 @@ const CreateSet: NextPage = () => {
                         </div>
                     ))}
                 </div>
-                <div className="flex flex-row space-x-4">
-                    <div className="basis-1/2 card-add flex flex-col space-y-4 rounded-md border-2 dark:border-dark-border">
+                <div className="flex md:flex-row flex-col md:space-x-4 md:space-y-0 space-x-0 space-y-2">
+                    <div className="md:basis-1/2 card-add flex flex-col space-y-4 rounded-md border-2 dark:border-dark-border">
                         <input
                             name={'cardsAddQty'}
                             type={'number'}
@@ -237,7 +257,7 @@ const CreateSet: NextPage = () => {
                         />
                     </div>
                     <div
-                        className="basis-1/2 card-add flex flex-col items-center justify-center space-y-4 dark:bg-dark-bg-secondary p-4 rounded-md cursor-pointer dark:hover:bg-dark-bg-secondary-hover border-2 dark:border-dark-border"
+                        className="md:basis-1/2 card-add flex flex-col items-center justify-center space-y-4 dark:bg-dark-bg-secondary p-4 rounded-md cursor-pointer dark:hover:bg-dark-bg-secondary-hover border-2 dark:border-dark-border"
                         onClick={() => {
                             newCardFor(cardsAddQty);
                         }}

@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowDown, faArrowUp, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 import { useState } from 'react';
 
@@ -20,11 +20,12 @@ interface Props {
     dragEnter: (e: React.DragEvent<HTMLDivElement>, cardNumber: number) => void;
     dragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
     dragTarget: number;
+    modifyOrder: (oldOrder: number, newOrder: number) => void;
 }
 
 // const Card: NextPage<Props> = ({ cardNumber, props_question, props_answer, change }) => {
 // const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, dragStart, handleDrop, change, deleteCard }) => {
-const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, change, deleteCard, dragStart, dragEnter, dragEnd, dragTarget }) => {
+const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, change, deleteCard, dragStart, dragEnter, dragEnd, dragTarget, modifyOrder }) => {
     const [question, setQuestion] = useState(props_question || '');
     const [answer, setAnswer] = useState(props_answer || '');
 
@@ -71,8 +72,26 @@ const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer
             // onDrop={handleDrop}
             className={`${dragTarget === cardNumber ? 'bg-dark-bg-secondary' : 'bg-dark-bg'} border-solid border-2 border-dark-border rounded-md p-4 flex flex-col space-y-4`}
         >
-            <div className="card-info flex flex-row justify-between px-2 text-dark-text">
+            <div id={cardNumber.toString()} className="card-info flex flex-row justify-between px-2 text-dark-text">
                 <a>{cardNumber}</a>
+                <div className="md:hidden flex flex-row space-x-3">
+                    <a
+                        onClick={() => {
+                            modifyOrder(cardNumber, cardNumber - 1);
+                        }}
+                        href={`#${cardNumber}`}
+                    >
+                        <FontAwesomeIcon icon={faArrowUp as IconProp} />
+                    </a>
+                    <a
+                        onClick={() => {
+                            modifyOrder(cardNumber, cardNumber + 1);
+                        }}
+                        href={`#${cardNumber}`}
+                    >
+                        <FontAwesomeIcon icon={faArrowDown as IconProp} />
+                    </a>
+                </div>
                 <div className="menu flex flex-row space-x-4">
                     <a
                         className="cursor-pointer hover:text-dark-text-hover"
@@ -85,12 +104,12 @@ const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer
                 </div>
             </div>
             <div className="border-solid border border-dark-border" />
-            <div className="card-data flex flex-row space-x-4">
+            <div className="card-data flex md:flex-row flex-col md:space-x-4 md:space-y-0 space-x-0 space-y-4">
                 <input
                     name="question"
                     type="text"
                     placeholder="question"
-                    className="p-4 rounded-md basis-1/2 dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
+                    className="p-4 rounded-md md:basis-1/2 dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
                     value={question}
                     onChange={handleChange}
                 />
@@ -98,7 +117,7 @@ const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer
                     name="answer"
                     type="text"
                     placeholder="answer"
-                    className="p-4 rounded-md basis-1/2 dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
+                    className="p-4 rounded-md md:basis-1/2 dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
                     value={answer}
                     onChange={handleChange}
                 />
