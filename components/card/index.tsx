@@ -15,11 +15,16 @@ interface Props {
     // handleDrop: (e: React.DragEvent<HTMLDivElement>) => void;
     change: (cardNumber: number, question: string, answer: string) => void;
     deleteCard: (cardNumber: number) => void;
+
+    dragStart: (e: React.DragEvent<HTMLDivElement>, cardNumber: number) => void;
+    dragEnter: (e: React.DragEvent<HTMLDivElement>, cardNumber: number) => void;
+    dragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
+    dragTarget: number;
 }
 
 // const Card: NextPage<Props> = ({ cardNumber, props_question, props_answer, change }) => {
 // const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, dragStart, handleDrop, change, deleteCard }) => {
-const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, change, deleteCard }) => {
+const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer = null, change, deleteCard, dragStart, dragEnter, dragEnd, dragTarget }) => {
     const [question, setQuestion] = useState(props_question || '');
     const [answer, setAnswer] = useState(props_answer || '');
 
@@ -41,13 +46,30 @@ const Card: NextPage<Props> = ({ cardNumber, props_question = null, props_answer
     return (
         <div
             id={cardNumber.toString()}
-            // draggable={true}
+            draggable={true}
             // onDragOver={(e) => {
-            //     e.preventDefault();
+            // e.preventDefault();
             // }}
             // onDragStart={dragStart}
+            // onDragStart={(e) => {
+            // console.log(`STARTING DRAGG... ${cardNumber}`);
+            // }}
+            // onDragEnter={(e) => {
+            //     console.log(`- ENTERING DRAGG... ${cardNumber}`);
+            //     console.log(` \`---> ${e}`);
+            // }}
+
+            onDragStart={(e) => {
+                dragStart(e, cardNumber);
+            }}
+            onDragEnter={(e) => {
+                dragEnter(e, cardNumber);
+            }}
+            onDragEnd={(e) => {
+                dragEnd(e);
+            }}
             // onDrop={handleDrop}
-            className="bg-dark-bg border-solid border-2 border-dark-border rounded-md p-4 flex flex-col space-y-4"
+            className={`${dragTarget === cardNumber ? 'bg-dark-bg-secondary' : 'bg-dark-bg'} border-solid border-2 border-dark-border rounded-md p-4 flex flex-col space-y-4`}
         >
             <div className="card-info flex flex-row justify-between px-2 text-dark-text">
                 <a>{cardNumber}</a>

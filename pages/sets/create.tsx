@@ -1,14 +1,23 @@
 import type { NextPage } from 'next';
-import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { getSession, signIn, useSession } from 'next-auth/react';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
+
 import Card from '../../components/card';
 import axios from 'axios';
 
-const Home: NextPage = () => {
+import interface_Card from '../../types/card/interface';
+
+const CreateSet: NextPage = () => {
     const { data: session } = useSession();
+    const router = useRouter();
+
+    const [errors, setErrors] = useState<string[]>([]);
 
     useEffect(() => {
         const asyncFunc = async () => {
@@ -21,26 +30,19 @@ const Home: NextPage = () => {
         asyncFunc();
     }, [session]);
 
-    interface interface_Card {
-        order: number;
-        question: string;
-        answer: string;
-    }
-
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [cards, setCards] = useState<interface_Card[]>([{ order: 0, question: '', answer: '' }]);
 
     const [cardsAddQty, setCardsAddQty] = useState(1);
 
-    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
         if (e.target.name === 'title') {
             setTitle(e.target.value);
         } else if (e.target.name === 'description') {
-            setDescription(e.target.value);
+            setDescription(e.target.value.split(/[\n\r]/g).join('\\n'));
         } else if (e.target.name === 'cardsAddQty') {
             setCardsAddQty(Number(e.target.value));
-            console.log(`cardsAddQty: ${cardsAddQty}`);
         }
     };
 
@@ -84,24 +86,57 @@ const Home: NextPage = () => {
     const submitSet = async () => {
         const newCards = cards
             .filter((card) => card.question !== '' && card.answer !== '')
-            .map((card) => ({
+            .map((card, index) => ({
+                number: index + 1,
                 question: card.question,
                 answer: card.answer
                     .split(',')
                     .map((ans) => ans.trim())
                     .filter((ans) => ans !== ''),
             }));
-
-        const newSet = await axios.post('/api/sets', {
-            title: title,
-            description: description,
-            cards: newCards,
-        });
-        if (!newSet) {
-            alert('Error submitting set');
-        } else {
-            alert('Set submitted');
+        try {
+            const newSet = await axios.post('/api/sets', {
+                title: title,
+                description: description,
+                cards: newCards,
+            });
+            console.log(`status: ${newSet.status}`);
+            if (newSet.status !== 200) {
+                alert('Error submitting set');
+            } else {
+                alert('Set submitted');
+                router.push('/');
+            }
+        } catch (e) {
+            // @ts-ignore
+            setErrors([...errors, e.response.data.message]);
         }
+    };
+
+    const dragCard = useRef<any>(null);
+    const dragOverCard = useRef<any>(null);
+
+    const [stateDragOverCard, setStateDragOverCard] = useState<any>(null);
+
+    const eachCard_dragStart = (e: React.DragEvent<HTMLDivElement>, cardNumber: number) => {
+        dragCard.current = cardNumber;
+    };
+
+    const eachCard_dragEnter = (e: React.DragEvent<HTMLDivElement>, cardNumber: number) => {
+        dragOverCard.current = cardNumber;
+        setStateDragOverCard(cardNumber);
+    };
+
+    const eachCard_dragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+        if (dragCard.current !== dragOverCard.current) {
+            const newCards = [...cards];
+            const card = newCards[dragCard.current - 1];
+            newCards.splice(dragCard.current - 1, 1);
+            newCards.splice(dragOverCard.current - 1, 0, card);
+            setCards(newCards);
+        }
+
+        setStateDragOverCard(null);
     };
 
     return (
@@ -117,6 +152,19 @@ const Home: NextPage = () => {
 
             <div className="spacer m-4" />
 
+            <div className="flex flex-col space-y-4">
+                {errors.length > 0 &&
+                    errors.map((error, index) => (
+                        <div key={index} className="alert alert-danger bg-danger-bg p-4 rounded-md mx-4">
+                            <FontAwesomeIcon icon={faTriangleExclamation as IconProp} />
+                            &nbsp;
+                            <a className="font-bold">{error}</a>
+                        </div>
+                    ))}
+            </div>
+
+            {errors.length > 0 && <div className="spacer m-4" />}
+
             <p className="px-4 font-bold text-3xl">CREATE A SET</p>
 
             <div className="spacer m-4" />
@@ -129,9 +177,8 @@ const Home: NextPage = () => {
                     className="p-4 rounded-md dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
                     onChange={onChange}
                 />
-                <input
+                <textarea
                     name="description"
-                    type="text"
                     placeholder="set's description"
                     className="p-4 rounded-md dark:bg-dark-bg-secondary border-2 dark:border-dark-border"
                     onChange={onChange}
@@ -142,8 +189,18 @@ const Home: NextPage = () => {
             <div className="spacer m-4" />
             <div className="create-cards flex flex-col space-y-4 mx-4">
                 <div className="card flex flex-col space-y-4">
+                    {cards.length == 0 && (
+                        <div
+                            className="cursor-pointer dark:bg-dark-bg dark:hover:bg-dark-bg-hover p-4 rounded-md border-2 dark:border-dark-border text-center"
+                            onClick={() => {
+                                newCard(1);
+                            }}
+                        >
+                            <a className="dark:text-dark-text">+</a>
+                        </div>
+                    )}
                     {cards.map((card, index) => (
-                        <div key={`${card.order}`} className={'flex flex-col space-y-4'} id={index.toString()}>
+                        <div key={`${card.order}`} id={`card-no-${card.order}`} className={'flex flex-col space-y-4'}>
                             <Card
                                 cardNumber={index + 1}
                                 props_question={card.question}
@@ -152,6 +209,10 @@ const Home: NextPage = () => {
                                 // handleDrop={handleDrop}
                                 change={modifyCard}
                                 deleteCard={deleteCard}
+                                dragStart={eachCard_dragStart}
+                                dragEnter={eachCard_dragEnter}
+                                dragEnd={eachCard_dragEnd}
+                                dragTarget={stateDragOverCard}
                             />
                             <div
                                 className="cursor-pointer dark:bg-dark-bg dark:hover:bg-dark-bg-hover p-4 rounded-md border-2 dark:border-dark-border text-center"
@@ -179,7 +240,6 @@ const Home: NextPage = () => {
                         className="basis-1/2 card-add flex flex-col items-center justify-center space-y-4 dark:bg-dark-bg-secondary p-4 rounded-md cursor-pointer dark:hover:bg-dark-bg-secondary-hover border-2 dark:border-dark-border"
                         onClick={() => {
                             newCardFor(cardsAddQty);
-                            console.log(`requested ${cardsAddQty}`);
                         }}
                     >
                         <a className="text-center dark:text-dark-text">add card</a>
@@ -198,4 +258,4 @@ const Home: NextPage = () => {
     );
 };
 
-export default Home;
+export default CreateSet;
